@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IIUM Timetable Generator (Clean Grid Edition)</title>
+  <title>IIUM Timetable Generator (Universal Edition)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- PDF.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -20,44 +20,64 @@
 <body class="bg-slate-100 text-slate-800 p-6 min-h-screen">
   <div class="max-w-[1700px] mx-auto space-y-4">
     
-    <!-- Top Action Bar -->
-    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-      <div>
-        <h1 class="text-lg font-bold text-slate-900">IIUM Class Schedule Generator</h1>
-        <p class="text-xs text-slate-500">A4 Landscape Canvas • 5-Column High-Legibility Grid</p>
-      </div>
+    <!-- Top Control Bar -->
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
+        <div>
+          <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">IIUM Universal Timetable Generator</h1>
+          <p class="text-xs text-slate-500 font-medium">Auto-detects all Kulliyyahs • Supports PDF Slips & i-Ma'luum Table Paste • A4 Landscape Output</p>
+        </div>
 
-      <div class="flex items-center gap-3 w-full sm:w-auto">
-        <label for="pdfUpload" class="flex-1 sm:flex-initial cursor-pointer bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-lg transition text-center shadow-xs">
-          <span>Upload Slip (.pdf)</span>
-          <input type="file" id="pdfUpload" accept="application/pdf" class="hidden" />
-        </label>
-        
-        <button id="downloadBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-5 py-2.5 rounded-lg shadow transition">
+        <button id="downloadBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           Export A4 PNG
         </button>
       </div>
+
+      <!-- Input Switch Tabs -->
+      <div class="flex flex-col md:flex-row gap-4">
+        <!-- PDF File Drop Target -->
+        <label for="pdfUpload" class="flex-1 border-2 border-dashed border-slate-300 hover:border-indigo-400 bg-slate-50 hover:bg-indigo-50/20 rounded-xl p-4 cursor-pointer transition flex items-center justify-center gap-3 text-center">
+          <svg class="w-6 h-6 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          <div class="text-left">
+            <span class="text-xs font-bold text-slate-700 block">Upload Confirmation Slip (.pdf)</span>
+            <span class="text-[10px] text-slate-400 font-medium">Automatic OCR & text extraction</span>
+          </div>
+          <input type="file" id="pdfUpload" accept="application/pdf" class="hidden" />
+        </label>
+
+        <!-- Or Paste from i-Ma'luum -->
+        <div class="flex-1 flex gap-2">
+          <textarea id="pasteInput" rows="2" class="flex-1 font-mono text-[11px] p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none" placeholder="Or paste i-Ma'luum table text here (Ctrl+C from portal)..."></textarea>
+          <button id="pasteParseBtn" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-4 rounded-xl transition">
+            Process Text
+          </button>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-xs px-1">
+        <span id="fileName" class="text-slate-500 font-mono italic">Awaiting document or text input...</span>
+        <span id="status" class="font-bold"></span>
+      </div>
     </div>
 
-    <div class="flex justify-between items-center px-1 text-xs">
-      <span id="fileName" class="text-slate-500 font-mono italic">No file loaded</span>
-      <span id="status" class="font-medium"></span>
-    </div>
-
-    <!-- Scrollable Outer Wrapper -->
+    <!-- Scrollable Canvas Wrapper -->
     <div class="bg-slate-300/60 p-4 rounded-2xl border border-slate-300 overflow-x-auto">
       
-      <!-- A4 Landscape Canvas: 1600px x 1131px (1.414:1) -->
+      <!-- A4 Landscape Sheet (1600px x 1131px) -->
       <div id="timetable" class="w-[1600px] h-[1131px] bg-white p-8 rounded-xl shadow-2xl flex flex-col justify-between box-border mx-auto">
         
-        <!-- Header Info -->
-        <div class="flex justify-between items-end border-b-2 border-slate-800 pb-3 mb-2">
+        <!-- Header Section -->
+        <div class="border-b-2 border-slate-800 pb-3 mb-2 flex justify-between items-end">
           <div>
             <div class="flex items-center gap-2">
-              <span class="bg-slate-900 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Official Schedule</span>
+              <span class="bg-slate-900 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Class Schedule</span>
               <h2 class="text-2xl font-black text-slate-900 tracking-tight">INTERNATIONAL ISLAMIC UNIVERSITY MALAYSIA</h2>
             </div>
-            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mt-0.5">Kulliyyah of Information and Communication Technology</p>
+            <!-- Dynamic Kulliyyah Subtitle -->
+            <p id="kulliyyahTitle" class="text-xs font-bold text-indigo-700 uppercase tracking-widest mt-0.5">
+              International Islamic University Malaysia
+            </p>
           </div>
           <div id="slipMeta" class="text-right text-xs font-mono text-slate-700 font-semibold leading-snug"></div>
         </div>
@@ -90,7 +110,7 @@
             </div>
           </div>
 
-          <!-- Main Schedule Lanes Container -->
+          <!-- Schedule Lanes Container -->
           <div class="relative grid grid-cols-[80px_repeat(5,1fr)] gap-2 flex-1 mt-2 box-border">
             
             <!-- Time Axis (Left column) -->
@@ -110,7 +130,7 @@
         <!-- Footer -->
         <div class="border-t border-slate-200 pt-2 flex justify-between items-center text-[10px] text-slate-400 font-mono">
           <span>Standard A4 Landscape View (297mm × 210mm)</span>
-          <span>IIUM Schedule Generator</span>
+          <span>Universal IIUM Schedule Generator</span>
         </div>
 
       </div>
@@ -134,6 +154,73 @@
       { bg: "bg-indigo-50/95", border: "border-indigo-400", title: "text-indigo-950", badge: "bg-indigo-700 text-white" },
       { bg: "bg-pink-50/95", border: "border-pink-400", title: "text-pink-950", badge: "bg-pink-700 text-white" }
     ];
+
+    // Multi-Kulliyyah mapping dictionary
+    const KULLIYYAH_MAP = {
+      "BCS": "Kulliyyah of Information and Communication Technology (KICT)",
+      "BIT": "Kulliyyah of Information and Communication Technology (KICT)",
+      "KENMS": "Kulliyyah of Economics and Management Sciences (KENMS)",
+      "KOE": "Kulliyyah of Engineering (KOE)",
+      "AIKOL": "Ahmad Ibrahim Kulliyyah of Laws (AIKOL)",
+      "KIRKHS": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)",
+      "KAED": "Kulliyyah of Architecture and Environmental Design (KAED)",
+      "KOED": "Kulliyyah of Education (KOED)",
+      "KOM": "Kulliyyah of Medicine (KOM)",
+      "KOP": "Kulliyyah of Pharmacy (KOP)",
+      "KON": "Kulliyyah of Nursing (KON)",
+      "KOS": "Kulliyyah of Science (KOS)",
+      "KAHS": "Kulliyyah of Allied Health Sciences (KAHS)",
+      "KLM": "Kulliyyah of Languages and Management (KLM)"
+    };
+
+    const PREFIX_MAP = {
+      "BICS": "Kulliyyah of Information and Communication Technology (KICT)",
+      "BIIT": "Kulliyyah of Information and Communication Technology (KICT)",
+      "ECON": "Kulliyyah of Economics and Management Sciences (KENMS)",
+      "ACC": "Kulliyyah of Economics and Management Sciences (KENMS)",
+      "FINC": "Kulliyyah of Economics and Management Sciences (KENMS)",
+      "MGT": "Kulliyyah of Economics and Management Sciences (KENMS)",
+      "MECH": "Kulliyyah of Engineering (KOE)",
+      "ELEC": "Kulliyyah of Engineering (KOE)",
+      "MANU": "Kulliyyah of Engineering (KOE)",
+      "MCT": "Kulliyyah of Engineering (KOE)",
+      "ENG": "Kulliyyah of Engineering (KOE)",
+      "LAWS": "Ahmad Ibrahim Kulliyyah of Laws (AIKOL)",
+      "RKQS": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)",
+      "RKFQ": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)",
+      "PSYC": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)",
+      "SOCA": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)",
+      "HIST": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)",
+      "COMM": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)",
+      "AAR": "Kulliyyah of Architecture and Environmental Design (KAED)",
+      "AQS": "Kulliyyah of Architecture and Environmental Design (KAED)",
+      "EDC": "Kulliyyah of Education (KOED)"
+    };
+
+    function detectKulliyyah(rawText, courses) {
+      const progMatch = rawText.match(/Program\s*:\s*([A-Za-z0-9]+)/i);
+      if (progMatch) {
+        const prog = progMatch[1].trim().toUpperCase().replace(/[0-9]/g, '');
+        for (const [key, faculty] of Object.entries(KULLIYYAH_MAP)) {
+          if (prog.startsWith(key) || key.startsWith(prog)) return faculty;
+        }
+      }
+
+      // Fallback via core course prefix
+      const core = courses.find(c => {
+        const pfx = c.code.split(' ')[0].toUpperCase();
+        return !["UNGS", "CCLM", "CCFM", "CCAC", "SCSH", "LEED", "LM"].includes(pfx);
+      });
+
+      if (core) {
+        const pfx = core.code.split(' ')[0].toUpperCase();
+        for (const [key, faculty] of Object.entries(PREFIX_MAP)) {
+          if (pfx.startsWith(key)) return faculty;
+        }
+      }
+
+      return "International Islamic University Malaysia";
+    }
 
     function initTimeRuler() {
       const timeCol = document.getElementById("timeCol");
@@ -162,10 +249,16 @@
       const [startStr, endStr] = clean.split('-').map(s => s.trim());
 
       function parsePart(str) {
-        const parts = str.split('.');
-        const h = parseInt(parts[0], 10);
-        const m = parts[1] ? parseInt(parts[1], 10) : 0;
-        return { h, m };
+        // Handles 24h format "1130" or 12h format "11.30"
+        if (str.includes('.')) {
+          const parts = str.split('.');
+          return { h: parseInt(parts[0], 10), m: parts[1] ? parseInt(parts[1], 10) : 0 };
+        } else if (str.length >= 3) {
+          const padded = str.padStart(4, '0');
+          return { h: parseInt(padded.slice(0, 2), 10), m: parseInt(padded.slice(2, 4), 10) };
+        } else {
+          return { h: parseInt(str, 10), m: 0 };
+        }
       }
 
       let start = parsePart(startStr);
@@ -189,6 +282,51 @@
       };
     }
 
+    function expandDays(dayCode) {
+      const upper = dayCode.toUpperCase().trim();
+      if (upper === "M-W") return ["MON", "WED"];
+      if (upper === "T-TH") return ["TUE", "THU"];
+      if (upper.startsWith("MON")) return ["MON"];
+      if (upper.startsWith("TUE")) return ["TUE"];
+      if (upper.startsWith("WED")) return ["WED"];
+      if (upper.startsWith("THU")) return ["THU"];
+      if (upper.startsWith("FRI")) return ["FRI"];
+      return [];
+    }
+
+    // Handles copied table data from i-Ma'luum
+    function parseTableData(text) {
+      const lines = text.trim().split('\n');
+      const courses = [];
+
+      lines.forEach(line => {
+        const cols = line.split('\t').map(c => c.trim());
+        if (cols.length >= 7 && !cols[0].toLowerCase().includes('code')) {
+          const code = cols[0].replace(/\s+/, ' ');
+          const title = cols[1];
+          const sec = cols[2];
+          const dayCode = cols[5];
+          const rawTime = cols[6];
+          const venue = cols[7] || "ONLINE / TBA";
+          const lecturer = cols[8] || "TBA";
+
+          courses.push({
+            code,
+            sec,
+            title,
+            days: expandDays(dayCode),
+            timeRange: parseTime(rawTime),
+            rawTime,
+            venue,
+            lecturer
+          });
+        }
+      });
+
+      return courses;
+    }
+
+    // Handles standard text from Confirmation Slip
     function parseSlipText(text) {
       const courses = [];
       const lines = text.split('\n');
@@ -216,23 +354,15 @@
           const rawTime = match[7].trim();
           let venue = match[8].trim() || "ONLINE / TBA";
 
-          let days = [];
-          if (dayCode === "M-W") days = ["MON", "WED"];
-          else if (dayCode === "T-TH") days = ["TUE", "THU"];
-          else if (dayCode.startsWith("MON")) days = ["MON"];
-          else if (dayCode.startsWith("TUE")) days = ["TUE"];
-          else if (dayCode.startsWith("WED")) days = ["WED"];
-          else if (dayCode.startsWith("THU")) days = ["THU"];
-          else if (dayCode.startsWith("FRI")) days = ["FRI"];
-
           courses.push({
             code,
             sec,
             title,
-            days,
+            days: expandDays(dayCode),
             timeRange: parseTime(rawTime),
             rawTime,
-            venue
+            venue,
+            lecturer: "TBA"
           });
         }
       });
@@ -240,7 +370,6 @@
     }
 
     function renderTimetable(courses) {
-      // Clear all lanes & draw horizontal hour guide-lines inside each column
       ["MON", "TUE", "WED", "THU", "FRI"].forEach(day => {
         const col = document.getElementById(`col-${day}`);
         col.innerHTML = '';
@@ -257,7 +386,6 @@
 
       courses.forEach((course, idx) => {
         const theme = COLOR_PALETTE[idx % COLOR_PALETTE.length];
-        
         const topPercent = ((course.timeRange.start - START_MIN) / TOTAL_MIN) * 100;
         const heightPercent = ((course.timeRange.end - course.timeRange.start) / TOTAL_MIN) * 100;
 
@@ -266,29 +394,33 @@
           if (!lane) return;
 
           const card = document.createElement("div");
-          // Full-width within day column with ample padding and vertical flex
-          card.className = `absolute left-1.5 right-1.5 p-2.5 rounded-xl border flex flex-col justify-between shadow-xs z-10 box-border overflow-hidden ${theme.bg} ${theme.border}`;
+          card.className = `absolute left-1.5 right-1.5 p-2 rounded-xl border flex flex-col justify-between shadow-xs z-10 box-border overflow-hidden ${theme.bg} ${theme.border}`;
           card.style.top = `${topPercent}%`;
           card.style.height = `${heightPercent}%`;
 
           card.innerHTML = `
-            <!-- Top Row: Course Code & Section Badge -->
-            <div class="flex items-center justify-between gap-1 leading-none mb-1">
-              <span class="font-extrabold text-[13px] tracking-tight ${theme.title}">${course.code}</span>
-              <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-black/5 text-slate-700">Sec ${course.sec}</span>
+            <!-- Top Section: Code & Section -->
+            <div>
+              <div class="flex items-center justify-between gap-1 leading-none mb-1">
+                <span class="font-extrabold text-[12px] tracking-tight ${theme.title}">${course.code}</span>
+                <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-black/5 text-slate-700">Sec ${course.sec}</span>
+              </div>
+              <div class="text-[10.5px] font-bold leading-tight text-slate-900 line-clamp-2">
+                ${course.title}
+              </div>
+              ${course.lecturer && course.lecturer !== 'TBA' ? `
+                <div class="text-[8.5px] font-bold text-slate-500 truncate mt-0.5 flex items-center gap-1">
+                  <span>👤</span> <span>${course.lecturer}</span>
+                </div>
+              ` : ''}
             </div>
 
-            <!-- Middle Row: Full Course Title (Spans comfortably across the 270px column) -->
-            <div class="text-[11px] font-bold leading-snug text-slate-800 my-auto">
-              ${course.title}
-            </div>
-
-            <!-- Bottom Row: Time and High-Contrast Bold Venue Badge -->
-            <div class="pt-1.5 border-t border-black/5 flex items-center justify-between gap-1 mt-1">
-              <span class="text-[10px] font-mono font-bold text-slate-600 tracking-tight shrink-0">
+            <!-- Bottom Section: Time and High-Contrast Venue Badge -->
+            <div class="pt-1 border-t border-black/5 flex items-center justify-between gap-1 mt-1">
+              <span class="text-[9.5px] font-mono font-bold text-slate-600 tracking-tight shrink-0">
                 ⏱ ${course.rawTime}
               </span>
-              <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded shadow-xs truncate ${theme.badge}" title="${course.venue}">
+              <span class="text-[9.5px] font-black uppercase px-2 py-0.5 rounded shadow-xs truncate ${theme.badge}" title="${course.venue}">
                 📍 ${course.venue}
               </span>
             </div>
@@ -325,6 +457,7 @@
       return fullText;
     }
 
+    // PDF listener
     document.getElementById("pdfUpload").addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -346,6 +479,7 @@
           return;
         }
 
+        document.getElementById("kulliyyahTitle").innerText = detectKulliyyah(extractedText, parsedCourses);
         renderTimetable(parsedCourses);
         statusEl.className = "text-emerald-600 font-semibold";
         statusEl.innerText = `Mapped ${parsedCourses.length} courses!`;
@@ -356,7 +490,34 @@
       }
     });
 
-    // Exact A4 PNG Export (1600 x 1131 px @ 2x supersampling)
+    // Paste listener
+    document.getElementById("pasteParseBtn").addEventListener("click", () => {
+      const text = document.getElementById("pasteInput").value;
+      if (!text.trim()) return;
+
+      const statusEl = document.getElementById("status");
+      statusEl.className = "text-indigo-600 font-semibold";
+      statusEl.innerText = "Processing text...";
+
+      // Try table format first, then slip text format
+      let parsed = parseTableData(text);
+      if (parsed.length === 0) {
+        parsed = parseSlipText(text);
+      }
+
+      if (parsed.length === 0) {
+        statusEl.className = "text-rose-500 font-semibold";
+        statusEl.innerText = "No courses found. Paste i-Ma'luum table rows or slip text.";
+        return;
+      }
+
+      document.getElementById("kulliyyahTitle").innerText = detectKulliyyah(text, parsed);
+      renderTimetable(parsed);
+      statusEl.className = "text-emerald-600 font-semibold";
+      statusEl.innerText = `Mapped ${parsed.length} courses!`;
+    });
+
+    // A4 PNG Export
     document.getElementById("downloadBtn").addEventListener("click", () => {
       const node = document.getElementById("timetable");
       
