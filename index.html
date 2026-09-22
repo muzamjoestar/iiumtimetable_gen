@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IIUM Timetable Generator (Universal Edition)</title>
+  <title>IIUM Timetable Generator (Universal A4 HD)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- PDF.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -11,7 +11,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
@@ -20,12 +20,12 @@
 <body class="bg-slate-100 text-slate-800 p-6 min-h-screen">
   <div class="max-w-[1700px] mx-auto space-y-4">
     
-    <!-- Top Control Bar -->
+    <!-- Top Action Bar -->
     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
         <div>
           <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">IIUM Universal Timetable Generator</h1>
-          <p class="text-xs text-slate-500 font-medium">Auto-detects all Kulliyyahs • Supports PDF Slips & i-Ma'luum Table Paste • A4 Landscape Output</p>
+          <p class="text-xs text-slate-500 font-medium">Full Schedule Coverage (08:00 – 22:00) • Zero Split Sections • A4 Landscape Output</p>
         </div>
 
         <button id="downloadBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
@@ -36,20 +36,18 @@
 
       <!-- Input Switch Tabs -->
       <div class="flex flex-col md:flex-row gap-4">
-        <!-- PDF File Drop Target -->
-        <label for="pdfUpload" class="flex-1 border-2 border-dashed border-slate-300 hover:border-indigo-400 bg-slate-50 hover:bg-indigo-50/20 rounded-xl p-4 cursor-pointer transition flex items-center justify-center gap-3 text-center">
-          <svg class="w-6 h-6 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        <label for="pdfUpload" class="flex-1 border-2 border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50 hover:bg-indigo-50/20 rounded-xl p-4 cursor-pointer transition flex items-center justify-center gap-3 text-center">
+          <svg class="w-6 h-6 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
           <div class="text-left">
-            <span class="text-xs font-bold text-slate-700 block">Upload Confirmation Slip (.pdf)</span>
-            <span class="text-[10px] text-slate-400 font-medium">Automatic OCR & text extraction</span>
+            <span class="text-xs font-bold text-slate-800 block">Upload Confirmation Slip (.pdf)</span>
+            <span class="text-[10px] text-slate-400 font-medium">Supports all faculties & degree programmes</span>
           </div>
           <input type="file" id="pdfUpload" accept="application/pdf" class="hidden" />
         </label>
 
-        <!-- Or Paste from i-Ma'luum -->
         <div class="flex-1 flex gap-2">
           <textarea id="pasteInput" rows="2" class="flex-1 font-mono text-[11px] p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none" placeholder="Or paste i-Ma'luum table text here (Ctrl+C from portal)..."></textarea>
-          <button id="pasteParseBtn" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-4 rounded-xl transition">
+          <button id="pasteParseBtn" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-5 rounded-xl transition">
             Process Text
           </button>
         </div>
@@ -64,64 +62,63 @@
     <!-- Scrollable Canvas Wrapper -->
     <div class="bg-slate-300/60 p-4 rounded-2xl border border-slate-300 overflow-x-auto">
       
-      <!-- A4 Landscape Sheet (1600px x 1131px) -->
-      <div id="timetable" class="w-[1600px] h-[1131px] bg-white p-8 rounded-xl shadow-2xl flex flex-col justify-between box-border mx-auto">
+      <!-- A4 Landscape Sheet (1600px x 1131px, exact 1.414:1) -->
+      <div id="timetable" class="w-[1600px] h-[1131px] bg-white p-7 rounded-xl shadow-2xl flex flex-col justify-between box-border mx-auto">
         
-        <!-- Header Section -->
-        <div class="border-b-2 border-slate-800 pb-3 mb-2 flex justify-between items-end">
+        <!-- Header Info -->
+        <div class="border-b-2 border-slate-900 pb-3 mb-2 flex justify-between items-end">
           <div>
             <div class="flex items-center gap-2">
               <span class="bg-slate-900 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Class Schedule</span>
               <h2 class="text-2xl font-black text-slate-900 tracking-tight">INTERNATIONAL ISLAMIC UNIVERSITY MALAYSIA</h2>
             </div>
-            <!-- Dynamic Kulliyyah Subtitle -->
-            <p id="kulliyyahTitle" class="text-xs font-bold text-indigo-700 uppercase tracking-widest mt-0.5">
+            <p id="kulliyyahTitle" class="text-xs font-extrabold text-indigo-700 uppercase tracking-widest mt-1">
               International Islamic University Malaysia
             </p>
           </div>
-          <div id="slipMeta" class="text-right text-xs font-mono text-slate-700 font-semibold leading-snug"></div>
+          <div id="slipMeta" class="text-right text-xs font-mono text-slate-700 font-bold leading-snug"></div>
         </div>
 
-        <!-- 5-Column Grid Body -->
-        <div class="flex-1 flex flex-col">
+        <!-- Main Timetable Body -->
+        <div class="flex-1 flex flex-col justify-between">
           
           <!-- Column Headers: Days of the Week -->
-          <div class="grid grid-cols-[80px_repeat(5,1fr)] gap-2 pb-2 border-b border-slate-200 text-center select-none">
-            <div class="font-mono text-[11px] font-bold text-slate-400 uppercase py-1">TIME</div>
-            <div class="bg-slate-50 py-1.5 rounded-lg border border-slate-200">
-              <span class="font-extrabold text-xs text-slate-800 uppercase tracking-wider block">Monday</span>
+          <div class="grid grid-cols-[70px_repeat(5,1fr)] gap-2 pb-1.5 border-b border-slate-200 text-center select-none">
+            <div class="font-mono text-[11px] font-extrabold text-slate-400 uppercase py-1">TIME</div>
+            <div class="bg-slate-100/90 py-1.5 rounded-lg border border-slate-200">
+              <span class="font-black text-xs text-slate-800 uppercase tracking-wider block">Monday</span>
               <span class="text-[9px] font-bold text-slate-400 uppercase block">Isnin</span>
             </div>
-            <div class="bg-slate-50 py-1.5 rounded-lg border border-slate-200">
-              <span class="font-extrabold text-xs text-slate-800 uppercase tracking-wider block">Tuesday</span>
+            <div class="bg-slate-100/90 py-1.5 rounded-lg border border-slate-200">
+              <span class="font-black text-xs text-slate-800 uppercase tracking-wider block">Tuesday</span>
               <span class="text-[9px] font-bold text-slate-400 uppercase block">Selasa</span>
             </div>
-            <div class="bg-slate-50 py-1.5 rounded-lg border border-slate-200">
-              <span class="font-extrabold text-xs text-slate-800 uppercase tracking-wider block">Wednesday</span>
+            <div class="bg-slate-100/90 py-1.5 rounded-lg border border-slate-200">
+              <span class="font-black text-xs text-slate-800 uppercase tracking-wider block">Wednesday</span>
               <span class="text-[9px] font-bold text-slate-400 uppercase block">Rabu</span>
             </div>
-            <div class="bg-slate-50 py-1.5 rounded-lg border border-slate-200">
-              <span class="font-extrabold text-xs text-slate-800 uppercase tracking-wider block">Thursday</span>
+            <div class="bg-slate-100/90 py-1.5 rounded-lg border border-slate-200">
+              <span class="font-black text-xs text-slate-800 uppercase tracking-wider block">Thursday</span>
               <span class="text-[9px] font-bold text-slate-400 uppercase block">Khamis</span>
             </div>
-            <div class="bg-slate-50 py-1.5 rounded-lg border border-slate-200">
-              <span class="font-extrabold text-xs text-slate-800 uppercase tracking-wider block">Friday</span>
+            <div class="bg-slate-100/90 py-1.5 rounded-lg border border-slate-200">
+              <span class="font-black text-xs text-slate-800 uppercase tracking-wider block">Friday</span>
               <span class="text-[9px] font-bold text-slate-400 uppercase block">Jumaat</span>
             </div>
           </div>
 
-          <!-- Schedule Lanes Container -->
-          <div class="relative grid grid-cols-[80px_repeat(5,1fr)] gap-2 flex-1 mt-2 box-border">
+          <!-- Unified Schedule Grid (Full 08:00 to 22:00) -->
+          <div class="relative grid grid-cols-[70px_repeat(5,1fr)] gap-2 flex-1 mt-1.5 box-border">
             
             <!-- Time Axis (Left column) -->
-            <div id="timeCol" class="relative h-full border-r border-slate-200 font-mono text-[11px] font-bold text-slate-400 select-none"></div>
+            <div id="timeCol" class="relative h-full border-r border-slate-200 font-mono text-[10.5px] font-bold text-slate-400 select-none"></div>
 
             <!-- Day Columns (Mon - Fri) -->
-            <div id="col-MON" class="relative h-full bg-slate-50/50 rounded-xl border border-slate-200/80 shadow-inner"></div>
-            <div id="col-TUE" class="relative h-full bg-slate-50/50 rounded-xl border border-slate-200/80 shadow-inner"></div>
-            <div id="col-WED" class="relative h-full bg-slate-50/50 rounded-xl border border-slate-200/80 shadow-inner"></div>
-            <div id="col-THU" class="relative h-full bg-slate-50/50 rounded-xl border border-slate-200/80 shadow-inner"></div>
-            <div id="col-FRI" class="relative h-full bg-slate-50/50 rounded-xl border border-slate-200/80 shadow-inner"></div>
+            <div id="col-MON" class="relative h-full bg-slate-50/50 rounded-xl border border-slate-200/90 shadow-inner"></div>
+            <div id="col-TUE" class="relative h-full bg-slate-50/50 rounded-xl border border-slate-200/90 shadow-inner"></div>
+            <div id="col-WED" class="relative h-full bg-slate-50/50 rounded-xl border border-slate-200/90 shadow-inner"></div>
+            <div id="col-THU" class="relative h-full bg-slate-50/50 rounded-xl border border-slate-200/90 shadow-inner"></div>
+            <div id="col-FRI" class="relative h-full bg-slate-50/50 rounded-xl border border-slate-200/90 shadow-inner"></div>
 
           </div>
 
@@ -140,61 +137,49 @@
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-    const START_MIN = 8 * 60;       // 8:00 AM (480 min)
-    const END_MIN = 22 * 60;        // 10:00 PM (1320 min)
+    // Full coverage from 08:00 to 22:00 (14 hours = 840 mins)
+    const START_MIN = 8 * 60;       // 08:00
+    const END_MIN = 22 * 60;        // 22:00
     const TOTAL_MIN = END_MIN - START_MIN; // 840 mins
 
+    // High-contrast, clean solid palettes designed specifically for html2canvas export
     const COLOR_PALETTE = [
-      { bg: "bg-sky-50/95", border: "border-sky-400", title: "text-sky-950", badge: "bg-sky-700 text-white" },
-      { bg: "bg-emerald-50/95", border: "border-emerald-400", title: "text-emerald-950", badge: "bg-emerald-700 text-white" },
-      { bg: "bg-amber-50/95", border: "border-amber-400", title: "text-amber-950", badge: "bg-amber-700 text-white" },
-      { bg: "bg-purple-50/95", border: "border-purple-400", title: "text-purple-950", badge: "bg-purple-700 text-white" },
-      { bg: "bg-rose-50/95", border: "border-rose-400", title: "text-rose-950", badge: "bg-rose-700 text-white" },
-      { bg: "bg-teal-50/95", border: "border-teal-400", title: "text-teal-950", badge: "bg-teal-700 text-white" },
-      { bg: "bg-indigo-50/95", border: "border-indigo-400", title: "text-indigo-950", badge: "bg-indigo-700 text-white" },
-      { bg: "bg-pink-50/95", border: "border-pink-400", title: "text-pink-950", badge: "bg-pink-700 text-white" }
+      { bg: "bg-sky-50", border: "border-sky-500", text: "text-sky-950", badge: "bg-sky-800 text-white" },
+      { bg: "bg-emerald-50", border: "border-emerald-500", text: "text-emerald-950", badge: "bg-emerald-800 text-white" },
+      { bg: "bg-amber-50", border: "border-amber-500", text: "text-amber-950", badge: "bg-amber-800 text-white" },
+      { bg: "bg-purple-50", border: "border-purple-500", text: "text-purple-950", badge: "bg-purple-800 text-white" },
+      { bg: "bg-rose-50", border: "border-rose-500", text: "text-rose-950", badge: "bg-rose-800 text-white" },
+      { bg: "bg-teal-50", border: "border-teal-500", text: "text-teal-950", badge: "bg-teal-800 text-white" },
+      { bg: "bg-indigo-50", border: "border-indigo-500", text: "text-indigo-950", badge: "bg-indigo-800 text-white" },
+      { bg: "bg-orange-50", border: "border-orange-500", text: "text-orange-950", badge: "bg-orange-800 text-white" }
     ];
 
-    // Multi-Kulliyyah mapping dictionary
     const KULLIYYAH_MAP = {
       "BCS": "Kulliyyah of Information and Communication Technology (KICT)",
       "BIT": "Kulliyyah of Information and Communication Technology (KICT)",
       "KENMS": "Kulliyyah of Economics and Management Sciences (KENMS)",
+      "BACC": "Kulliyyah of Economics and Management Sciences (KENMS)",
       "KOE": "Kulliyyah of Engineering (KOE)",
+      "BENM": "Kulliyyah of Engineering (KOE)",
+      "BENGM": "Kulliyyah of Engineering (KOE)",
       "AIKOL": "Ahmad Ibrahim Kulliyyah of Laws (AIKOL)",
-      "KIRKHS": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)",
-      "KAED": "Kulliyyah of Architecture and Environmental Design (KAED)",
-      "KOED": "Kulliyyah of Education (KOED)",
-      "KOM": "Kulliyyah of Medicine (KOM)",
-      "KOP": "Kulliyyah of Pharmacy (KOP)",
-      "KON": "Kulliyyah of Nursing (KON)",
-      "KOS": "Kulliyyah of Science (KOS)",
-      "KAHS": "Kulliyyah of Allied Health Sciences (KAHS)",
-      "KLM": "Kulliyyah of Languages and Management (KLM)"
+      "BARHQ": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)",
+      "KAED": "Kulliyyah of Architecture and Environmental Design (KAED)"
     };
 
     const PREFIX_MAP = {
       "BICS": "Kulliyyah of Information and Communication Technology (KICT)",
       "BIIT": "Kulliyyah of Information and Communication Technology (KICT)",
       "ECON": "Kulliyyah of Economics and Management Sciences (KENMS)",
-      "ACC": "Kulliyyah of Economics and Management Sciences (KENMS)",
-      "FINC": "Kulliyyah of Economics and Management Sciences (KENMS)",
-      "MGT": "Kulliyyah of Economics and Management Sciences (KENMS)",
+      "ACCT": "Kulliyyah of Economics and Management Sciences (KENMS)",
+      "MGMT": "Kulliyyah of Economics and Management Sciences (KENMS)",
       "MECH": "Kulliyyah of Engineering (KOE)",
-      "ELEC": "Kulliyyah of Engineering (KOE)",
-      "MANU": "Kulliyyah of Engineering (KOE)",
-      "MCT": "Kulliyyah of Engineering (KOE)",
-      "ENG": "Kulliyyah of Engineering (KOE)",
+      "MFGA": "Kulliyyah of Engineering (KOE)",
+      "EECE": "Kulliyyah of Engineering (KOE)",
+      "MATH": "Kulliyyah of Engineering (KOE)",
       "LAWS": "Ahmad Ibrahim Kulliyyah of Laws (AIKOL)",
-      "RKQS": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)",
       "RKFQ": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)",
-      "PSYC": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)",
-      "SOCA": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)",
-      "HIST": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)",
-      "COMM": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)",
-      "AAR": "Kulliyyah of Architecture and Environmental Design (KAED)",
-      "AQS": "Kulliyyah of Architecture and Environmental Design (KAED)",
-      "EDC": "Kulliyyah of Education (KOED)"
+      "RKQS": "Kulliyyah of Islamic Revealed Knowledge and Human Sciences (KIRKHS)"
     };
 
     function detectKulliyyah(rawText, courses) {
@@ -206,10 +191,9 @@
         }
       }
 
-      // Fallback via core course prefix
       const core = courses.find(c => {
         const pfx = c.code.split(' ')[0].toUpperCase();
-        return !["UNGS", "CCLM", "CCFM", "CCAC", "SCSH", "LEED", "LM"].includes(pfx);
+        return !["UNGS", "CCLM", "CCFM", "CCAC", "SCSH", "LEED", "LM", "CCUB"].includes(pfx);
       });
 
       if (core) {
@@ -249,7 +233,6 @@
       const [startStr, endStr] = clean.split('-').map(s => s.trim());
 
       function parsePart(str) {
-        // Handles 24h format "1130" or 12h format "11.30"
         if (str.includes('.')) {
           const parts = str.split('.');
           return { h: parseInt(parts[0], 10), m: parts[1] ? parseInt(parts[1], 10) : 0 };
@@ -294,7 +277,6 @@
       return [];
     }
 
-    // Handles copied table data from i-Ma'luum
     function parseTableData(text) {
       const lines = text.trim().split('\n');
       const courses = [];
@@ -326,7 +308,6 @@
       return courses;
     }
 
-    // Handles standard text from Confirmation Slip
     function parseSlipText(text) {
       const courses = [];
       const lines = text.split('\n');
@@ -337,8 +318,8 @@
 
       if (nameMatch || matricMatch) {
         document.getElementById("slipMeta").innerHTML = `
-          <div class="text-slate-900 font-bold">${nameMatch ? nameMatch[1].trim() : ''}</div>
-          <div class="text-slate-500 font-medium">MATRIC: ${matricMatch ? matricMatch[1].trim() : ''} • ${semMatch ? semMatch[1].trim() : ''}</div>
+          <div class="text-slate-900 font-extrabold">${nameMatch ? nameMatch[1].trim() : ''}</div>
+          <div class="text-slate-500 font-semibold">MATRIC: ${matricMatch ? matricMatch[1].trim() : ''} • ${semMatch ? semMatch[1].trim() : ''}</div>
         `;
       }
 
@@ -370,6 +351,7 @@
     }
 
     function renderTimetable(courses) {
+      // Clear columns and draw horizontal hour gridlines
       ["MON", "TUE", "WED", "THU", "FRI"].forEach(day => {
         const col = document.getElementById(`col-${day}`);
         col.innerHTML = '';
@@ -378,7 +360,7 @@
           const min = h * 60;
           const topPercent = ((min - START_MIN) / TOTAL_MIN) * 100;
           const line = document.createElement("div");
-          line.className = "absolute left-0 right-0 border-t border-slate-200/80 pointer-events-none";
+          line.className = "absolute left-0 right-0 border-t border-slate-200/90 pointer-events-none";
           line.style.top = `${topPercent}%`;
           col.appendChild(line);
         }
@@ -394,33 +376,42 @@
           if (!lane) return;
 
           const card = document.createElement("div");
-          card.className = `absolute left-1.5 right-1.5 p-2 rounded-xl border flex flex-col justify-between shadow-xs z-10 box-border overflow-hidden ${theme.bg} ${theme.border}`;
+          // High density vertical card with 4px solid left accent border
+          card.className = `absolute left-1.5 right-1.5 p-2 rounded-xl border-l-[4px] ${theme.border} border-t border-r border-b border-slate-200 shadow-sm z-10 box-border overflow-hidden flex flex-col justify-between ${theme.bg}`;
           card.style.top = `${topPercent}%`;
           card.style.height = `${heightPercent}%`;
 
+          // Check duration: if class is short (<= 60 mins), use single-line compact layout
+          const durationMins = course.timeRange.end - course.timeRange.start;
+          const isCompact = durationMins <= 60;
+
           card.innerHTML = `
-            <!-- Top Section: Code & Section -->
-            <div>
-              <div class="flex items-center justify-between gap-1 leading-none mb-1">
-                <span class="font-extrabold text-[12px] tracking-tight ${theme.title}">${course.code}</span>
-                <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-black/5 text-slate-700">Sec ${course.sec}</span>
+            <div class="leading-snug">
+              <!-- Header Row: Code & Section Badge -->
+              <div class="flex items-center justify-between gap-1 mb-0.5">
+                <span class="font-black text-[12px] tracking-tight ${theme.text}">${course.code}</span>
+                <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-black/5 text-slate-700">Sec ${course.sec}</span>
               </div>
-              <div class="text-[10.5px] font-bold leading-tight text-slate-900 line-clamp-2">
+
+              <!-- Title: Bold, clamped to 2 lines max, legible 10.5px -->
+              <div class="text-[10px] font-bold text-slate-900 ${isCompact ? 'truncate' : 'line-clamp-2'}">
                 ${course.title}
               </div>
-              ${course.lecturer && course.lecturer !== 'TBA' ? `
-                <div class="text-[8.5px] font-bold text-slate-500 truncate mt-0.5 flex items-center gap-1">
-                  <span>👤</span> <span>${course.lecturer}</span>
+
+              <!-- Lecturer (if available and height permits) -->
+              ${!isCompact && course.lecturer && course.lecturer !== 'TBA' ? `
+                <div class="text-[8.5px] font-semibold text-slate-500 truncate mt-0.5">
+                  👤 ${course.lecturer}
                 </div>
               ` : ''}
             </div>
 
-            <!-- Bottom Section: Time and High-Contrast Venue Badge -->
-            <div class="pt-1 border-t border-black/5 flex items-center justify-between gap-1 mt-1">
-              <span class="text-[9.5px] font-mono font-bold text-slate-600 tracking-tight shrink-0">
-                ⏱ ${course.rawTime}
+            <!-- Footer: Time + Venue Pill aligned side-by-side -->
+            <div class="pt-1 border-t border-black/5 flex items-center justify-between gap-1 mt-auto">
+              <span class="text-[9px] font-mono font-bold text-slate-600 shrink-0">
+                ${course.rawTime}
               </span>
-              <span class="text-[9.5px] font-black uppercase px-2 py-0.5 rounded shadow-xs truncate ${theme.badge}" title="${course.venue}">
+              <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded shadow-xs truncate ${theme.badge}" title="${course.venue}">
                 📍 ${course.venue}
               </span>
             </div>
@@ -499,7 +490,6 @@
       statusEl.className = "text-indigo-600 font-semibold";
       statusEl.innerText = "Processing text...";
 
-      // Try table format first, then slip text format
       let parsed = parseTableData(text);
       if (parsed.length === 0) {
         parsed = parseSlipText(text);
@@ -517,7 +507,7 @@
       statusEl.innerText = `Mapped ${parsed.length} courses!`;
     });
 
-    // A4 PNG Export
+    // Exact A4 PNG Export (1600 x 1131 px @ 2x supersampling)
     document.getElementById("downloadBtn").addEventListener("click", () => {
       const node = document.getElementById("timetable");
       
@@ -531,7 +521,7 @@
         windowWidth: 1650
       }).then(canvas => {
         const link = document.createElement("a");
-        link.download = "IIUM_Timetable_A4.png";
+        link.download = "IIUM_Timetable_A4_Full.png";
         link.href = canvas.toDataURL("image/png");
         link.click();
       });
